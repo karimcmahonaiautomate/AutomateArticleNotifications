@@ -1,0 +1,17 @@
+# List every publication you write for, with its RSS feed URL.
+# The "name" here must exactly match the "publication" column in your
+# Google Sheet's Articles tab (case-insensitive).
+#
+# Finding an RSS feed: try {site-root}/feed or {site-root}/rss.xml, or
+# search "<publication name> RSS feed". Most news sites have one.
+
+publications:
+  - name: "A Media Operator"
+    rss_url: "https://www.amediaoperator.com/feed/"
+
+  - name: "LeadDev"
+    rss_url: "https://leaddev.com/feed"
+
+  # Add more like this:
+  # - name: "Example Publication"
+  #   rss_url: "https://example.com/feed/"
