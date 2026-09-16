@@ -114,6 +114,48 @@ schedule).
 
 ---
 
+## Keeping the Gmail token alive (while the app is in "Testing" mode)
+Google expires `GMAIL_REFRESH_TOKEN` every ~7 days as long as your OAuth
+app's publishing status is "Testing" (the normal status for a personal,
+single-user tool like this — going to "Production" requires domain
+ownership and a public privacy policy, which isn't worth it here).
+
+This repo includes automation that gets renewal down to "click Allow in
+a browser tab once a week":
+
+### One-time setup
+1. Install the GitHub CLI and log in once:
+   ```
+   brew install gh
+   gh auth login
+   ```
+2. Confirm `scripts/refresh_gmail_token.sh` is executable (it already
+   is in this zip, but if you re-download or move it: `chmod +x
+   scripts/refresh_gmail_token.sh`).
+
+### Schedule it to prompt you weekly
+1. From inside `scripts/`, run `pwd` and copy the full path it prints.
+2. Open `com.articlenotifier.refreshtoken.plist` in a text editor and
+   replace the placeholder path with `<that path>/refresh_gmail_token.sh`
+   (i.e. the folder `pwd` printed, plus `/refresh_gmail_token.sh`).
+3. Copy the file into macOS's LaunchAgents folder and load it:
+   ```
+   cp com.articlenotifier.refreshtoken.plist ~/Library/LaunchAgents/
+   launchctl load ~/Library/LaunchAgents/com.articlenotifier.refreshtoken.plist
+   ```
+4. Every Monday at 9am (only while your Mac is awake and logged in — it
+   won't fire if the machine is asleep or off), a browser tab will pop
+   open asking you to log in as the notifications account and click
+   Allow. That's the only manual step; the new token gets pushed to
+   GitHub automatically right after.
+
+You can also just run `./scripts/refresh_gmail_token.sh` manually any
+time you see an `invalid_grant` error in the Actions log, without
+waiting for the schedule.
+
+To remove the schedule later: `launchctl unload
+~/Library/LaunchAgents/com.articlenotifier.refreshtoken.plist`
+
 ## Ongoing use
 Whenever you line up an article with sources, just add a row to
 `Articles` and matching rows to `Contacts` before or right after
