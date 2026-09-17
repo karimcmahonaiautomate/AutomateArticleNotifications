@@ -25,6 +25,7 @@ import json
 import os
 import sys
 from datetime import date
+from email import charset as email_charset
 from email.mime.text import MIMEText
 
 import feedparser
