@@ -100,6 +100,11 @@ def send_email(service, to_email, to_name, subject, body_text):
     raw = base64.urlsafe_b64encode(msg.as_bytes()).decode()
     if DRY_RUN:
         print(f"  [DRY RUN] Would send to {to_name} <{to_email}>: {subject}")
+        print("  --- body, repr() so hidden characters are visible ---")
+        print(f"  {body_text!r}")
+        print("  --- body, as it would actually read ---")
+        print(body_text)
+        print("  --- end body ---")
         return
     service.users().messages().send(userId="me", body={"raw": raw}).execute()
     print(f"  Sent to {to_name} <{to_email}>")
