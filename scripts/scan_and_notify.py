@@ -35,6 +35,11 @@ from google.oauth2.credentials import Credentials
 from google.oauth2.service_account import Credentials as ServiceAccountCredentials
 from googleapiclient.discovery import build
 
+# Force base64 body encoding for UTF-8 text instead of the default
+# quoted-printable, which inserts soft line-wrap characters that some
+# email clients don't stitch back together cleanly.
+email_charset.add_charset("utf-8", email_charset.SHORTEST, email_charset.BASE64, "utf-8")
+
 DRY_RUN = os.environ.get("DRY_RUN", "false").lower() == "true"
 
 ARTICLES_TAB = "Articles"
@@ -107,11 +112,11 @@ def build_email_body(contact_name, publication, article_url, custom_note):
         f"Thanks again for speaking with me. The article is now live on "
         f"{publication}:\n\n{article_url}\n"
         f"{note_block}\n"
-        f"Thanks again for your time and insights.\n\n"
+        f"Thanks again for your time and insights!\n\n"
         f"Best,\n"
-        f"Kari McMahon\n"
-        f"(P.S. This is an automated email. Replies to this email are sent to my main address.)\n"
-        f"(I may not be immediately available to respond to your email, but I will get back to you as soon as possible.)\n"
+        f"Kari\n"
+        f"(P.S. This is an automated email. Replies to this email are sent to my main address.)\n\n"
+        f"(I may not be immediately available to respond to your email, but I will get back to you as soon as possible.)\n\n"
     )
 
 
