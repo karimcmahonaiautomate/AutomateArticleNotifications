@@ -59,6 +59,7 @@ COL_CONTACT_ARTICLE_ID = "article_id"
 COL_CONTACT_NAME = "contact_name"
 COL_CONTACT_EMAIL = "contact_email"
 COL_CUSTOM_NOTE = "custom_note"
+COL_GROUP = "group"
 
 
 def load_sources():
@@ -91,15 +92,16 @@ def get_gmail_service():
     return build("gmail", "v1", credentials=creds)
 
 
-def send_email(service, to_email, to_name, subject, body_text):
+def send_email(service, to, subject, body_text):
+    to_list = [to] if isinstance(to, str) else list(to)
     msg = MIMEText(body_text)
-    msg["to"] = to_email
+    msg["to"] = ", ".join(to_list)
     msg["from"] = os.environ["SENDER_EMAIL"]
     msg["reply-to"] = os.environ["MAIN_EMAIL"]
     msg["subject"] = subject
     raw = base64.urlsafe_b64encode(msg.as_bytes()).decode()
     if DRY_RUN:
-        print(f"  [DRY RUN] Would send to {to_name} <{to_email}>: {subject}")
+        print(f"  [DRY RUN] Would send to {', '.join(to_list)}: {subject}")
         print("  --- body, repr() so hidden characters are visible ---")
         print(f"  {body_text!r}")
         print("  --- body, as it would actually read ---")
@@ -107,7 +109,7 @@ def send_email(service, to_email, to_name, subject, body_text):
         print("  --- end body ---")
         return
     service.users().messages().send(userId="me", body={"raw": raw}).execute()
-    print(f"  Sent to {to_name} <{to_email}>")
+    print(f"  Sent to {', '.join(to_list)}")
 
 def build_self_notification_body(article_id, publication, article_url, linked_contacts):
     if linked_contacts:
@@ -130,8 +132,13 @@ def build_self_notification_body(article_id, publication, article_url, linked_co
         f"{contacts_block}"
     )
 
-def build_email_body(contact_name, publication, article_url, custom_note):
-    greeting = f"Hi {contact_name}," if contact_name else "Hi,"
+def build_email_body(contact_names, publication, article_url, custom_note):
+    if len(contact_names) > 1:
+        greeting = f"Hi {', '.join(contact_names[:-1])} and {contact_names[-1]},"
+    elif contact_names and contact_names[0]:
+        greeting = f"Hi {contact_names[0]},"
+    else:
+        greeting = "Hi,"
     note_block = f"\n{custom_note}\n" if custom_note else ""
     return (
         f"{greeting}\n\n"
@@ -217,23 +224,30 @@ def main():
         self_body = build_self_notification_body(
             article_id, article[COL_PUBLICATION], article_url, linked_contacts
         )
-        send_email(gmail_service, os.environ["MAIN_EMAIL"], "You", self_subject, self_body)
+        send_email(gmail_service, os.environ["MAIN_EMAIL"], self_subject, self_body)
 
         if not linked_contacts:
             print(f"  No contacts found for article_id {article_id} — skipping source send.")
 
-        for contact in linked_contacts:
+                # Group contacts sharing a non-blank "group" value into one
+        # email each; contacts with a blank group each get their own.
+        batches = {}
+        for c in linked_contacts:
+            key = str(c.get(COL_GROUP, "")).strip() or f"__single__{id(c)}"
+            batches.setdefault(key, []).append(c)
+
+        for batch in batches.values():
+            names = [c.get(COL_CONTACT_NAME, "") for c in batch]
+            combined_note = "\n".join(
+                c.get(COL_CUSTOM_NOTE, "") for c in batch if c.get(COL_CUSTOM_NOTE, "")
+            )
             body = build_email_body(
-                contact.get(COL_CONTACT_NAME, ""),
-                article[COL_PUBLICATION],
-                article_url,
-                contact.get(COL_CUSTOM_NOTE, ""),
+                names, article[COL_PUBLICATION], article_url, combined_note
             )
             subject = f"Your interview is live in {article[COL_PUBLICATION]}"
             send_email(
                 gmail_service,
-                contact[COL_CONTACT_EMAIL],
-                contact.get(COL_CONTACT_NAME, ""),
+                [c[COL_CONTACT_EMAIL] for c in batch],
                 subject,
                 body,
             )
