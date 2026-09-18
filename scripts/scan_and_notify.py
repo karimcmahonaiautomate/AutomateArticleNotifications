@@ -109,6 +109,26 @@ def send_email(service, to_email, to_name, subject, body_text):
     service.users().messages().send(userId="me", body={"raw": raw}).execute()
     print(f"  Sent to {to_name} <{to_email}>")
 
+def build_self_notification_body(article_id, publication, article_url, linked_contacts):
+    if linked_contacts:
+        contact_lines = "\n".join(
+            f"- {c.get(COL_CONTACT_NAME, '') or '(no name)'} <{c.get(COL_CONTACT_EMAIL, '')}>"
+            for c in linked_contacts
+        )
+        contacts_block = f"Contacts notified:\n{contact_lines}\n"
+    else:
+        contacts_block = (
+            "No contacts were linked to this article_id in the Contacts tab, "
+            "so no source emails were sent.\n"
+        )
+
+    return (
+        f"Your article just went live.\n\n"
+        f"Article ID: {article_id}\n"
+        f"Publication: {publication}\n"
+        f"URL: {article_url}\n\n"
+        f"{contacts_block}"
+    )
 
 def build_email_body(contact_name, publication, article_url, custom_note):
     greeting = f"Hi {contact_name}," if contact_name else "Hi,"
@@ -190,9 +210,19 @@ def main():
             c for c in contacts
             if str(c.get(COL_CONTACT_ARTICLE_ID, "")).strip() == str(article_id).strip()
         ]
+
+        # Notify yourself every time a match is found, regardless of
+        # whether any source contacts are linked to this article yet.
+        self_subject = f"[Notifier] {article[COL_PUBLICATION]} article is live"
+        self_body = build_self_notification_body(
+            article_id, article[COL_PUBLICATION], article_url, linked_contacts
+        )
+        send_email(gmail_service, os.environ["MAIN_EMAIL"], "You", self_subject, self_body)
+
         if not linked_contacts:
-            print(f"  No contacts found for article_id {article_id} — skipping send.")
-            continue
+            print(f"  No contacts found for article_id {article_id} — skipping source send.")
+
+        for contact in linked_contacts:
 
         for contact in linked_contacts:
             body = build_email_body(
