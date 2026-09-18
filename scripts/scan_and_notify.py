@@ -138,9 +138,9 @@ def build_email_body(contact_name, publication, article_url, custom_note):
         f"Thanks again for speaking with me. The article is now live on "
         f"{publication}:\n\n{article_url}\n"
         f"{note_block}\n"
-        f"Thanks again for your time and insights!\n\n"
+        f"Thanks you for your time and insights!\n\n"
         f"Best,\n"
-        f"Kari\n"
+        f"Kari\n\n"
         f"(P.S. This is an automated email. Replies to this email are sent to my main address.)\n\n"
         f"(I may not be immediately available to respond to your email, but I will get back to you as soon as possible.)\n\n"
     )
@@ -221,7 +221,6 @@ def main():
 
         if not linked_contacts:
             print(f"  No contacts found for article_id {article_id} — skipping source send.")
-
 
         for contact in linked_contacts:
             body = build_email_body(
