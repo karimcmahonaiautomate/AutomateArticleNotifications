@@ -222,7 +222,6 @@ def main():
         if not linked_contacts:
             print(f"  No contacts found for article_id {article_id} — skipping source send.")
 
-        for contact in linked_contacts:
 
         for contact in linked_contacts:
             body = build_email_body(
