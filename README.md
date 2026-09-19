@@ -3,7 +3,7 @@
 
 This is an automated workflow that emails interview sources when the article they contributed to goes live, by scanning each publication's RSS feed on a schedule.
 
-###### How it works ######
+### How it works 
 
 1. The Google Sheet
 
