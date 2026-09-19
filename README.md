@@ -3,7 +3,7 @@
 
 This is an automated workflow that emails interview sources when the article they contributed to goes live, by scanning each publication's RSS feed on a schedule.
 
-####### How it works ######
+###### How it works ######
 
 1. The Google Sheet
 
@@ -25,7 +25,7 @@ When a match is found, the script sends an email to the contacts from a dedicate
 
 I also personally receive a notification that the article has been published 
 
-####### What's Involved ######
+### What's Involved 
 
 There's some one-time setup involved:
 
@@ -39,7 +39,7 @@ There's some one-time setup involved:
 
 
 
-####### Building The Google Sheet ######
+### Building The Google Sheet 
 
 **`Articles`** — columns, exactly in this order:
 | article_id | publication | match_keywords | status | found_url | sent_date |
@@ -54,7 +54,7 @@ There's some one-time setup involved:
 
 **`Contacts`** — columns, exactly in this order:
 | article_id | contact_name | contact_email | custom_note | group |
-|---|---|---|---|
+|---|---|---|---|---|
 
 - `article_id`: matches the row in `Articles`
 - 'contact_name': first name of source
@@ -66,7 +66,7 @@ There's some one-time setup involved:
 Add multiple rows to `Contacts` with the same `article_id` for multi-source articles.
 
 
-###### Keeping the Gmail token alive (while the app is in "Testing" mode) #######
+### Keeping the Gmail token alive (while the app is in "Testing" mode) 
 
 Google expires `GMAIL_REFRESH_TOKEN` every ~7 days as long as your OAuth app's publishing status is "Testing" (the normal status for a personal, single-user tool like this — going to "Production" requires domainownership and a public privacy policy, which isn't worth it here).
 
@@ -80,7 +80,7 @@ To remove the schedule later: `launchctl unload ~/Library/LaunchAgents com.artic
 
 
 
-###### Ongoing use ######
+### Ongoing use 
 
 Whenever you line up an article with sources, just add a row to `Articles` and matching rows to `Contacts` before or right after publication. That's the entire manual step — the rest runs itself.
 
@@ -88,7 +88,7 @@ Whenever you write for a new publication, just add it to the spreadsheet
 
 
 
-###### Notes and limitations ######
+### Notes and limitations 
 
 - Matching is keyword-based since the exact headline isn't known in advance. Pick distinctive keywords to avoid false matches, and check `found_url` after the first few real sends.
 
