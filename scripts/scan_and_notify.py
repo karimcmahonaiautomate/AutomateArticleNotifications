@@ -30,7 +30,6 @@ from email.mime.text import MIMEText
 
 import feedparser
 import gspread
-import yaml
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google.oauth2.service_account import Credentials as ServiceAccountCredentials
@@ -45,6 +44,8 @@ DRY_RUN = os.environ.get("DRY_RUN", "false").lower() == "true"
 
 ARTICLES_TAB = "Articles"
 CONTACTS_TAB = "Contacts"
+PUBLICATIONS_TAB = "Publications"
+
 
 # Articles tab columns
 COL_ARTICLE_ID = "article_id"
@@ -62,12 +63,14 @@ COL_CUSTOM_NOTE = "custom_note"
 COL_GROUP = "group"
 
 
-def load_sources():
-    here = os.path.dirname(os.path.abspath(__file__))
-    with open(os.path.join(here, "..", "config", "sources.yaml")) as f:
-        cfg = yaml.safe_load(f)
-    return {p["name"].strip().lower(): p["rss_url"] for p in cfg["publications"]}
-
+def load_sources(sheet):
+    ws = sheet.worksheet(PUBLICATIONS_TAB)
+    rows = ws.get_all_records()
+    return {
+        str(row["name"]).strip().lower(): str(row["rss_url"]).strip()
+        for row in rows
+        if row.get("name") and row.get("rss_url")
+    }
 
 def open_sheet():
     sa_info = json.loads(os.environ["GOOGLE_SERVICE_ACCOUNT_JSON"])
@@ -147,15 +150,14 @@ def build_email_body(contact_names, publication, article_url, custom_note):
         f"Thanks you for your time and insights!\n\n"
         f"Best,\n"
         f"Kari\n\n"
-        f"(P.S. This is an automated email that's in beta testing.)\n\n"
-        f"(Replies to this email are forwarded to my main email address.)\n\n"
+        f"(P.S. This is an automated email that's in beta testing. Replies to this email are forwarded to my main email address.)\n\n"
         f"(I may not be immediately available to respond to your email, but I will get back to you as soon as possible.)\n\n"
     )
 
 
 def main():
-    sources = load_sources()
     sheet = open_sheet()
+    sources = load_sources(sheet)
 
     articles_ws = sheet.worksheet(ARTICLES_TAB)
     contacts_ws = sheet.worksheet(CONTACTS_TAB)
