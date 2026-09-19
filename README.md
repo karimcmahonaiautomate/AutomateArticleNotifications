@@ -7,7 +7,7 @@ This is an automated workflow that emails interview sources when the article the
 
 1. The Google Sheet
 
-I maintain a Google Sheet with two tabs:
+I maintain a Google Sheet with three tabs:
 
 - Articles - one row per upcoming piece, with keywords that will appear in its headline once published.
 
