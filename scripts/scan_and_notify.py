@@ -97,7 +97,6 @@ def send_email(service, to, subject, body_text):
     msg = MIMEText(body_text)
     msg["to"] = ", ".join(to_list)
     msg["from"] = os.environ["SENDER_EMAIL"]
-    msg["reply-to"] = os.environ["MAIN_EMAIL"]
     msg["subject"] = subject
     raw = base64.urlsafe_b64encode(msg.as_bytes()).decode()
     if DRY_RUN:
@@ -148,7 +147,8 @@ def build_email_body(contact_names, publication, article_url, custom_note):
         f"Thanks you for your time and insights!\n\n"
         f"Best,\n"
         f"Kari\n\n"
-        f"(P.S. This is an automated email. Replies to this email are sent to my main address.)\n\n"
+        f"(P.S. This is an automated email that's in beta testing.)\n\n"
+        f"(Replies to this email are forwarded to my main email address.)\n\n"
         f"(I may not be immediately available to respond to your email, but I will get back to you as soon as possible.)\n\n"
     )
 
