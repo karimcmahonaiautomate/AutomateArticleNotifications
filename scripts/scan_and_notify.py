@@ -54,6 +54,7 @@ COL_KEYWORDS = "match_keywords"
 COL_STATUS = "status"
 COL_FOUND_URL = "found_url"
 COL_SENT_DATE = "sent_date"
+COL_CREATOR = "expected_creator"  # optional — leave blank to skip this check
 
 # Contacts tab columns
 COL_CONTACT_ARTICLE_ID = "article_id"
@@ -200,15 +201,40 @@ def main():
             print(f"Row {row_num}: no match_keywords set, skipping.")
             continue
 
+        expected_creator = str(article.get(COL_CREATOR, "")).strip().lower()
+
         entries = feed_entries.get(pub, [])
         match = None
+        checked_titles = []
         for entry in entries:
             title = entry.get("title", "").lower()
-            if all(kw in title for kw in keywords):
-                match = entry
-                break
+            summary = entry.get("summary", "").lower()
+            search_text = f"{title} {summary}"
+            checked_titles.append(entry.get("title", ""))
+
+            keywords_ok = all(kw in search_text for kw in keywords)
+            if not keywords_ok:
+                continue
+
+            if expected_creator:
+                # feedparser maps <dc:creator> onto entry.author.
+                entry_author = entry.get("author", "").lower()
+                if expected_creator not in entry_author:
+                    print(
+                        f"  Keywords matched '{entry.get('title', '')}' but "
+                        f"author '{entry.get('author', '')}' didn't contain "
+                        f"expected creator '{article.get(COL_CREATOR, '')}' — skipping."
+                    )
+                    continue
+
+            match = entry
+            break
 
         if not match:
+            if checked_titles:
+                print(f"  No match for article_id={article[COL_ARTICLE_ID]}. Titles checked:")
+                for t in checked_titles:
+                    print(f"    - {t}")
             continue
 
         article_id = article[COL_ARTICLE_ID]
