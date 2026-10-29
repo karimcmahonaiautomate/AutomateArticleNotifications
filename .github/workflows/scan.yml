@@ -4,7 +4,7 @@ on:
   schedule:
     # Runs every 30 minutes. GitHub may delay this slightly during
     # busy periods — that's normal for scheduled Actions.
-    - cron: "*/30 * * * *"
+    - cron: "12,42 * * * *"
   workflow_dispatch:
     # Lets you trigger a run manually from the Actions tab, useful
     # for testing.
