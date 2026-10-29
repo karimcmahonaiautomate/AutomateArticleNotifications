@@ -62,6 +62,7 @@ COL_CONTACT_NAME = "contact_name"
 COL_CONTACT_EMAIL = "contact_email"
 COL_CUSTOM_NOTE = "custom_note"
 COL_GROUP = "group"
+COL_CONTACT_TYPE = "contact_type"  # optional: "pr" for PR contacts, blank for sources
 
 
 def load_sources(sheet):
@@ -149,6 +150,27 @@ def build_email_body(contact_names, publication, article_url, custom_note):
         f"{publication}:\n\n{article_url}\n"
         f"{note_block}\n"
         f"Thanks you for your time and insights!\n\n"
+        f"Best,\n"
+        f"Kari\n\n"
+        f"(P.S. This is an automated email that's in beta testing. Replies to this email are forwarded to my main email address.)\n\n"
+        f"(I may not be immediately available to respond to your email, but I will get back to you as soon as possible.)\n\n"
+    )
+
+
+def build_pr_email_body(contact_names, publication, article_url, custom_note):
+    if len(contact_names) > 1:
+        greeting = f"Hi {', '.join(contact_names[:-1])} and {contact_names[-1]},"
+    elif contact_names and contact_names[0]:
+        greeting = f"Hi {contact_names[0]},"
+    else:
+        greeting = "Hi,"
+    note_block = f"\n{custom_note}\n" if custom_note else ""
+    return (
+        f"{greeting}\n\n"
+        f"I wanted to let you know that the article "
+        f"is now live on {publication}:\n\n{article_url}\n"
+        f"{note_block}\n"
+        f"Thanks for your help with the piece!\n\n"
         f"Best,\n"
         f"Kari\n\n"
         f"(P.S. This is an automated email that's in beta testing. Replies to this email are forwarded to my main email address.)\n\n"
@@ -269,10 +291,20 @@ def main():
             combined_note = "\n".join(
                 c.get(COL_CUSTOM_NOTE, "") for c in batch if c.get(COL_CUSTOM_NOTE, "")
             )
-            body = build_email_body(
-                names, article[COL_PUBLICATION], article_url, combined_note
+            # Use the PR wording only if everyone in this email is a PR contact.
+            is_pr = all(
+                str(c.get(COL_CONTACT_TYPE, "")).strip().lower() == "pr" for c in batch
             )
-            subject = f"Your interview is live in {article[COL_PUBLICATION]}"
+            if is_pr:
+                body = build_pr_email_body(
+                    names, article[COL_PUBLICATION], article_url, combined_note
+                )
+                subject = f"Article now live in {article[COL_PUBLICATION]}"
+            else:
+                body = build_email_body(
+                    names, article[COL_PUBLICATION], article_url, combined_note
+                )
+                subject = f"Your interview is live in {article[COL_PUBLICATION]}"
             send_email(
                 gmail_service,
                 [c[COL_CONTACT_EMAIL] for c in batch],
